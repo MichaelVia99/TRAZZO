@@ -1,0 +1,35 @@
+<Window x:Class="Bitacora.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Trazzo - Login"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="True"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="CenterScreen">
+    <Grid Background="Transparent" Margin="0">
+        <Border CornerRadius="10"
+                Background="Transparent"
+                BorderBrush="{StaticResource GlassBorder}"
+                BorderThickness="5"
+                Effect="{StaticResource ElevatedShadow}"
+                ClipToBounds="True"
+                Margin="0">
+            <Grid>
+    <!-- Contenido Principal -->
+                <ContentControl x:Name="MainContent" Background="Transparent" Margin="0">
+                    <!-- Aquí se cargará la vista HomeSupportView automáticamente desde el código -->
+                </ContentControl>
+                
+                <!-- Contenedor de Notificaciones -->
+                <StackPanel x:Name="NotificationContainer" 
+                            VerticalAlignment="Bottom" 
+                            HorizontalAlignment="Right" 
+                            Margin="0,0,20,20"
+                            Panel.ZIndex="1000"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

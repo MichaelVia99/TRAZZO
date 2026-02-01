@@ -1,0 +1,477 @@
+<UserControl x:Class="Bitacora.Views.AsignacionesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:models="clr-namespace:Bitacora.Models"
+             Background="Transparent">
+    
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="8">
+        <ItemsControl x:Name="AsignacionesItemsControl" Background="Transparent">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type models:Registro}">
+                    <Border Background="{StaticResource CardBackground}"
+                            CornerRadius="6"
+                            BorderBrush="{StaticResource CardBorder}"
+                            BorderThickness="1"
+                            Margin="0,0,0,6"
+                            Effect="{StaticResource CardShadow}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="4"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <!-- Barra lateral de color -->
+                            <Border Grid.Column="0"
+                                    Background="{Binding ColorEstado, Mode=OneWay, FallbackValue=Transparent}"
+                                    CornerRadius="5,0,0,5"/>
+                            
+                            <!-- Contenido del card -->
+                            <Grid Grid.Column="1" Margin="8,6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Fila 1: Header Compacto -->
+                                <Grid Grid.Row="0" Margin="0,0,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/> <!-- Icono Tipo -->
+                                        <ColumnDefinition Width="*"/>    <!-- Titulo -->
+                                        <ColumnDefinition Width="Auto"/> <!-- Prioridad -->
+                                        <ColumnDefinition Width="Auto"/> <!-- Estado -->
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Icono Tipo -->
+                                    <Border Grid.Column="0" 
+                                        Width="30" Height="28" 
+                                        CornerRadius="4" 
+                                        Background="{Binding ColorTipoBrush, FallbackValue=Transparent}" 
+                                        Margin="0,0,8,0"
+                                        VerticalAlignment="Center">
+                                                                        <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                                            <TextBlock Text="{Binding IconoTipo}" 
+                                                   FontFamily="Segoe MDL2 Assets" 
+                                                   FontSize="12" 
+                                                   Foreground="White" 
+                                                   HorizontalAlignment="Center"
+                                                   Margin="0,0,0,0"/>
+                                                                            <TextBlock Text="{Binding CodigoFull}" 
+                                                   FontWeight="SemiBold" 
+                                                   Foreground="White" 
+                                                   FontSize="9" 
+                                                   HorizontalAlignment="Center"/>
+                                                                        </StackPanel>
+                                                                    </Border>
+
+                                    <!-- Titulo -->
+                                    <StackPanel Grid.Column="1" Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <TextBlock 
+                                               FontSize="10"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextPrimary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" Text="{Binding Titulo}"/>
+                                        <TextBlock 
+                                               FontSize="9"
+                                               FontWeight="SemiBold"
+                                               Foreground="{StaticResource TextSecondary}"
+                                               TextTrimming="CharacterEllipsis"
+                                               VerticalAlignment="Center" 
+                                               Text="{Binding Descripcion}"/>
+                                    </StackPanel>
+
+                                    <!-- Prioridad -->
+                                    <Border Grid.Column="2"
+                                            CornerRadius="15"
+                                            Padding="5,0"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Margin="6,0,0,0"
+                                            Width="25"
+                                            Height="25">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{StaticResource PriorityNormalBrush}"/>
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Prioridad}" Value="Critica">
+                                                        <Setter Property="Background" Value="{StaticResource PriorityCriticalBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Prioridad}" Value="Alta">
+                                                        <Setter Property="Background" Value="{StaticResource PriorityHighBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Prioridad}" Value="Menor">
+                                                        <Setter Property="Background" Value="{StaticResource PriorityLowBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Prioridad}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Prioridad}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
+                                            <Viewbox x:Name="PrioridadCriticaIcon"
+                                                     Width="14"
+                                                     Height="14">
+                                                <Viewbox.Style>
+                                                    <Style TargetType="Viewbox">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding PrioridadNivel}" Value="4">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Viewbox.Style>
+                                                <Canvas Width="26" Height="26">
+                                                    <Path Data="M12 4 L3 20 H21 Z"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeLineJoin="Round"
+                                                          Fill="Transparent"/>
+                                                    <Path Data="M12 9 L12 13"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                    <Path Data="M12 17 L12.01 17"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <Viewbox x:Name="PrioridadAltaIcon"
+                                                     Width="16"
+                                                     Height="16">
+                                                <Viewbox.Style>
+                                                    <Style TargetType="Viewbox">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding PrioridadNivel}" Value="3">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Viewbox.Style>
+                                                <Canvas Width="24" Height="24">
+                                                    <Ellipse Width="18" Height="18"
+                                                             Stroke="White"
+                                                             StrokeThickness="2"
+                                                             Canvas.Left="3"
+                                                             Canvas.Top="3"/>
+                                                    <Path Data="M12 8 L12 15"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                    <Path Data="M9 11 L12 8 L15 11"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeLineJoin="Round"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"
+                                                          Fill="Transparent"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <Viewbox x:Name="PrioridadNormalIcon"
+                                                     Width="16"
+                                                     Height="16">
+                                                <Viewbox.Style>
+                                                    <Style TargetType="Viewbox">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding PrioridadNivel}" Value="2">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Viewbox.Style>
+                                                <Canvas Width="24" Height="24">
+                                                    <Ellipse Width="18" Height="18"
+                                                             Stroke="White"
+                                                             StrokeThickness="2"
+                                                             Canvas.Left="3"
+                                                             Canvas.Top="3"/>
+                                                    <Path Data="M9 12 L15 12"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <Viewbox x:Name="PrioridadMenorIcon"
+                                                     Width="16"
+                                                     Height="16">
+                                                <Viewbox.Style>
+                                                    <Style TargetType="Viewbox">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding PrioridadNivel}" Value="1">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Viewbox.Style>
+                                                <Canvas Width="24" Height="24">
+                                                    <Ellipse Width="18" Height="18"
+                                                             Stroke="White"
+                                                             StrokeThickness="2"
+                                                             Canvas.Left="3"
+                                                             Canvas.Top="3"/>
+                                                    <Path Data="M12 9 L12 16"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeStartLineCap="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                    <Path Data="M9 13 L12 16 L15 13"
+                                                          Stroke="White"
+                                                          StrokeThickness="2"
+                                                          StrokeLineJoin="Round"
+                                                          StrokeEndLineCap="Round"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Estado -->
+                                    <Border Grid.Column="3" 
+                                            CornerRadius="3" 
+                                            Padding="6,2" 
+                                            Margin="6,0,0,0">
+                                        <TextBlock Text="{Binding EstadoTexto, Mode=OneWay}"
+                                                   Foreground="{Binding ColorEstado, Mode=OneWay, FallbackValue=Black}"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="9"
+                                                   FontWeight="Bold"/>
+                                    </Border>
+                                </Grid>
+
+                                
+                                <!-- Fila 3: Metricas y Acciones -->
+                                <Grid Grid.Row="2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Métricas (Tareas y Tiempo) -->
+                                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0">
+                                        <!-- Barra Tareas -->
+                                        <Grid Margin="0,0,0,0" ToolTip="Tareas Completadas / Totales">
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TotalTareas}" Value="0">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE9D5;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            <ProgressBar Grid.Column="1" Height="4" Margin="4,0" Minimum="0" Maximum="{Binding TotalTareas, Mode=OneWay}" Value="{Binding TareasCompletadas, Mode=OneWay}" BorderThickness="0" Background="#E0E0E0" Foreground="{StaticResource InfoBlueBrush}"/>
+                                            <TextBlock Grid.Column="2" FontSize="9" Foreground="{StaticResource TextSecondary}" MinWidth="25" TextAlignment="Right">
+                                                <Run Text="{Binding TareasCompletadas, Mode=OneWay}"/>
+                                                <Run Text="/"/>
+                                                <Run Text="{Binding TotalTareas, Mode=OneWay}"/>
+                                            </TextBlock>
+                                        </Grid>
+
+                                        <!-- Barra Tiempo (Solo si Estimado > 0) -->
+                                        <Grid ToolTip="Tiempo Restante">
+                                            <Grid.Style>
+                                                <Style TargetType="Grid">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding TiempoEstimado}" Value="0">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Grid.Style>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="16"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="&#xE916;" FontFamily="Segoe MDL2 Assets" FontSize="9" Foreground="{StaticResource TextSecondary}" VerticalAlignment="Center"/>
+                                            <!-- Barra inversa: Value=Restante, Max=Estimado. Inicia llena (Restante=Estimado) y baja. -->
+                                            <ProgressBar Grid.Column="1" Height="4" Margin="4,0" Minimum="0" Maximum="{Binding TiempoEstimado}" Value="{Binding TiempoRestante, Mode=OneWay}" BorderThickness="0" Background="#E0E0E0" Foreground="{Binding ColorEstadoBrush, FallbackValue=Gray}"/>
+                                            <TextBlock Grid.Column="2" Text="{Binding TiempoRestanteFormateado, Mode=OneWay}" FontSize="9" Foreground="{StaticResource TextSecondary}" MinWidth="25" TextAlignment="Right"/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <!-- Botones Compactos -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                        <!-- Botones de Acción (Iniciar, Pausar, Completar) -->
+                                        <StackPanel Orientation="Horizontal">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.Pendiente}">
+                                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            
+                                            <!-- Iniciar (Play) -->
+                                            <Button ToolTip="Iniciar"
+                                                    Click="IniciarButton_Click"
+                                                    Tag="{Binding}"
+                                                    Width="20" Height="20"
+                                                    Margin="0,0,4,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background" Value="{StaticResource InfoBlueBrush}"/>
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        <Style.Triggers>
+                                                            <!-- Habilitado si está EnEspera o Pausado -->
+                                                            <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.EnEspera}">
+                                                                <Setter Property="Opacity" Value="1.0"/>
+                                                                <Setter Property="IsEnabled" Value="True"/>
+                                                            </DataTrigger>
+                                                            <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.Pausado}">
+                                                                <Setter Property="Opacity" Value="1.0"/>
+                                                                <Setter Property="IsEnabled" Value="True"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                            <TextBlock Text="&#xE768;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+
+                                            <!-- Pausar -->
+                                            <Button ToolTip="Pausar"
+                                                    Click="PausarButton_Click"
+                                                    Tag="{Binding}"
+                                                    Width="20" Height="20"
+                                                    Margin="0,0,4,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background" Value="{StaticResource WarningOrangeBrush}"/>
+                                                        <Setter Property="Opacity" Value="0.3"/>
+                                                        <Setter Property="IsEnabled" Value="False"/>
+                                                        <Style.Triggers>
+                                                            <!-- Habilitado solo si está EnProceso -->
+                                                            <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.EnProceso}">
+                                                                <Setter Property="Opacity" Value="1.0"/>
+                                                                <Setter Property="IsEnabled" Value="True"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                            <TextBlock Text="&#xE769;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+
+                                            <!-- Cerrar/Completar -->
+                                            <Button ToolTip="Completar"
+                                                    Click="CerrarButton_Click"
+                                                    Tag="{Binding}"
+                                                    Width="20" Height="20"
+                                                    Margin="0,0,4,0"
+                                                    BorderThickness="0"
+                                                    Cursor="Hand">
+                                                <Button.Style>
+                                                    <Style TargetType="Button">
+                                                        <Setter Property="Background" Value="{StaticResource SuccessGreenBrush}"/>
+                                                        <Setter Property="Opacity" Value="1.0"/>
+                                                        <Setter Property="IsEnabled" Value="True"/>
+                                                        <Style.Triggers>
+                                                            <!-- Siempre habilitado excepto si ya está cerrado -->
+                                                            <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.Cerrado}">
+                                                                <Setter Property="Opacity" Value="0.3"/>
+                                                                <Setter Property="IsEnabled" Value="False"/>
+                                                            </DataTrigger>
+                                                            <!-- Deshabilitado si está Pendiente (Por Planificar) -->
+                                                            <DataTrigger Binding="{Binding Estado}" Value="{x:Static models:EstadoRegistro.Pendiente}">
+                                                                <Setter Property="Opacity" Value="0.3"/>
+                                                                <Setter Property="IsEnabled" Value="False"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Button.Style>
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </StackPanel>
+
+                                        <!-- Ver Detalles (Siempre visible) -->
+                                        <Button ToolTip="Ver Detalles"
+                                                Click="EditarButton_Click"
+                                                Tag="{Binding}"
+                                                Width="20" Height="20"
+                                                Background="{StaticResource InfoBlueBrush}"
+                                                BorderThickness="0"
+                                                Cursor="Hand">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                                        <TextBlock Text="&#xE7B3;" FontFamily="Segoe MDL2 Assets" Foreground="White" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                    </Border>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Prioridad}" Value="Critica">
+                                <Setter TargetName="PrioridadCriticaIcon" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="PrioridadAltaIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadNormalIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadMenorIcon" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Prioridad}" Value="Alta">
+                                <Setter TargetName="PrioridadCriticaIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadAltaIcon" Property="Visibility" Value="Visible"/>
+                                <Setter TargetName="PrioridadNormalIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadMenorIcon" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding Prioridad}" Value="Menor">
+                                <Setter TargetName="PrioridadCriticaIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadAltaIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadNormalIcon" Property="Visibility" Value="Collapsed"/>
+                                <Setter TargetName="PrioridadMenorIcon" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </ScrollViewer>
+</UserControl>

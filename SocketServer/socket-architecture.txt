@@ -1,0 +1,92 @@
+PROYECTO DE SOCKETS: Bitacora SocketServer
+-----------------------------------------
+
+Descripción general
+-------------------
+Este proyecto (carpeta "SocketServer") implementa un servidor de WebSocket en Node.js
+que se usa exclusivamente para las notificaciones en tiempo real de la aplicación WPF
+Bitacora.
+
+Procesos que usan sockets
+-------------------------
+1) Servidor de sockets (este proyecto)
+   - Proceso Node.js que se ejecuta con:
+       cd SocketServer
+       npm install
+       npm start   (equivalente a: node server.js)
+   - Escucha por defecto en el puerto 4000 (configurable con la variable de entorno SOCKET_PORT).
+
+2) Cliente WPF (aplicación Bitacora)
+   - Cada instancia de la aplicación Bitacora abre una conexión WebSocket hacia:
+       ws://localhost:4000
+     o hacia la URL configurada si se despliega en otro host/puerto.
+   - El cliente se registra enviando un mensaje JSON:
+       { "type": "register", "userId": "<ID_DEL_USUARIO>" }
+
+Lógica de comunicación
+----------------------
+1) Registro de clientes
+   - Al conectarse, el cliente WPF envía:
+       { "type": "register", "userId": "<ID_DEL_USUARIO>" }
+   - El servidor guarda la conexión en un mapa:
+       userId -> conjunto de conexiones WebSocket
+   - Esto permite que un mismo usuario tenga varias sesiones abiertas (por ejemplo en
+     diferentes equipos) y reciba la misma notificación en todas.
+
+2) Envío de notificaciones de asignación
+   - Cuando un usuario crea o asigna un registro en la aplicación Bitacora, el cliente
+     WPF puede enviar al servidor un mensaje:
+       {
+         "type": "assignment",
+         "toUserId": "<ID_DESTINO>",
+         "registroId": "<ID_REGISTRO>",
+         "tipo": "<TIPO_REGISTRO>",
+         "titulo": "<TITULO_REGISTRO>"
+       }
+   - El servidor recibe este mensaje y reenvía un evento del mismo tipo únicamente
+     al usuario destino (si tiene una o más conexiones WebSocket activas).
+   - El cliente destino recibe el mensaje y muestra la notificación de Windows usando
+     NotificationService en el proyecto WPF.
+
+3) Gestión de recursos
+   - El servidor mantiene un "heartbeat" (ping/pong) cada 30 segundos para detectar
+     conexiones muertas o inactivas.
+   - Si una conexión no responde al ping, se cierra automáticamente para liberar
+     recursos en el servidor.
+   - Al cerrar una conexión, se la elimina del mapa de conexiones del usuario. Si el
+     usuario se queda sin conexiones, se limpia la entrada completa.
+
+4) Reconexión automática (WPF)
+   - El cliente WPF implementa una lógica de reconexión automática.
+   - Si el servidor se cae o la red se desconecta, el cliente espera 5 segundos y 
+     vuelve a intentar conectar indefinidamente mientras el usuario tenga sesión iniciada.
+
+Despliegue en IIS (Internet Information Services)
+-------------------------------------------------
+Es posible desplegar este servidor Node.js en IIS para que se ejecute como un servicio
+y arranque automáticamente con el servidor.
+
+Requisitos previos en el servidor:
+1. Instalar Node.js (LTS).
+2. Instalar "IIS URL Rewrite Module".
+3. Instalar "iisnode" (IIS Node.js native module).
+4. Habilitar WebSocket Protocol en IIS (Panel de control -> Activar características de Windows -> IIS -> World Wide Web Services -> Application Development Features -> WebSocket Protocol).
+
+Pasos de instalación:
+1. Copiar la carpeta "SocketServer" al servidor (ej: C:\inetpub\wwwroot\BitacoraSockets).
+2. En esa carpeta, ejecutar "npm install --production".
+3. Crear un nuevo Sitio Web en IIS o una Aplicación dentro de un sitio existente apuntando a esa carpeta.
+4. El archivo "web.config" incluido ya está configurado para redirigir el tráfico a "server.js".
+5. Asegurarse de que el Application Pool tenga permisos de lectura/escritura en la carpeta.
+
+Notas importantes sobre web.config:
+- <webSocket enabled="false" />: Esto parece contraintuitivo, pero es necesario para que iisnode maneje los WebSockets correctamente en algunas versiones de IIS/socket.io. Si falla, intentar cambiar a "true" o eliminar la línea.
+- La URL de conexión desde los clientes WPF deberá apuntar al dominio/IP del servidor IIS (ej: ws://servidor-iis/BitacoraSockets).
+
+Resumen
+-------
+- Este proyecto Node.js NO accede a la base de datos.
+- Solo actúa como un canal en tiempo real para reenviar eventos de notificación
+  entre instancias de la aplicación Bitacora.
+- Toda la lógica de negocio (creación de registros, cambios de estado, etc.) sigue
+  ocurriendo en el proyecto WPF y en la base de datos existente.

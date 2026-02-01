@@ -1,0 +1,29 @@
+# Visual Studio
+.vs/
+.vscode/
+bin/
+obj/
+*.user
+*.suo
+*.pdb
+*.cache
+*.dll
+*.exe
+*.log
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# MacOS
+.DS_Store
+
+# Publish
+Properties/PublishProfiles/
+
+# Trae internal tools
+.trae/

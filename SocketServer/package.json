@@ -1,0 +1,15 @@
+{
+  "name": "bitacora-socket-server",
+  "version": "1.0.0",
+  "description": "Servidor de sockets para notificaciones en tiempo real de la aplicación Bitacora.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "mssql": "^12.2.0",
+    "ws": "^8.18.0"
+  }
+}

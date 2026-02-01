@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Bitacora/Bitacora.csproj" />
+  <Project Path="BitacoraApi/BitacoraApi.csproj" Id="c9841989-c37d-49e8-8391-7edfa2d487f8" />
+</Solution>
