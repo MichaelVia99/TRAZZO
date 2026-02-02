@@ -11,6 +11,8 @@ namespace BitacoraApi.Repositories
         Task<List<UsuarioDto>> GetUsuariosActivosAsync();
         Task<List<string>> GetProyectosActivosAsync();
         Task<List<string>> GetEmpresasActivasAsync();
+        Task<List<KeyValuePair<int, string>>> GetCanalesActivosAsync();
+        Task<List<KeyValuePair<string, string>>> GetSociosActivosAsync();
         Task<List<RegistroDto>> GetRegistrosAsync(string? creadoPor, string? asignadoA);
         Task<RegistroDto?> GetRegistroByIdAsync(string id);
         Task<string> InsertRegistroAsync(RegistroDto registro);

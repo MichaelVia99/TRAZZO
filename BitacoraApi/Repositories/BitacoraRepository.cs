@@ -187,11 +187,14 @@ SELECT b.iMBitacora, b.iCodigo, b.tTipo, b.tTitulo, b.tDescripcion,
        END as nMinutosEstimado,
        p.tProyecto, e.tRazonSocial,
        uResp.tNombreRed as NombreResponsable, b.tPrioridad, b.iMPadre, b.fInicio, b.fFin,
-       (SELECT COUNT(*) FROM DBITACORA s WHERE s.iMPadre = b.iMBitacora AND (s.lEliminado IS NULL OR s.lEliminado = 0)) as SubRegistrosCount
+       (SELECT COUNT(*) FROM DBITACORA s WHERE s.iMPadre = b.iMBitacora AND (s.lEliminado IS NULL OR s.lEliminado = 0)) as SubRegistrosCount,
+       can.tCanal, soc.tRazonSocial as Socio, b.tContacto, b.tTelefonoContacto, b.iMCanalContacto, b.iMSocio
 FROM DBITACORA b
 LEFT JOIN MPROYECTO p ON p.iMProyecto = b.iMProyecto
 LEFT JOIN MEMPRESA e ON e.iMEmpresa = b.iMEmpresa
-LEFT JOIN MUSUARIO uResp ON uResp.iMUsuario = b.iMResponsable";
+LEFT JOIN MUSUARIO uResp ON uResp.iMUsuario = b.iMResponsable
+LEFT JOIN MCANAL_CONTACTO can ON can.iMCanalContacto = b.iMCanalContacto
+LEFT JOIN MSOCIO soc ON soc.iMSocio = b.iMSocio";
 
             var whereParts = new List<string>();
             
@@ -247,13 +250,19 @@ LEFT JOIN MUSUARIO uResp ON uResp.iMUsuario = b.iMResponsable";
                     TiempoTranscurrido = minutosReal * 60,
                     TiempoEstimado = minutosEstimado * 60,
                     Proyecto = reader.IsDBNull(13) ? null : reader.GetString(13),
-                    Empresa = reader.IsDBNull(14) ? null : reader.GetString(14),
+                    Empresa = reader.IsDBNull(22) ? null : reader.GetString(22), // Mapeamos MSOCIO a Empresa
                     NombreAsignado = reader.IsDBNull(15) ? null : reader.GetString(15),
                     Prioridad = reader.IsDBNull(16) ? null : reader.GetString(16),
                     ParentId = reader.IsDBNull(17) ? null : reader.GetInt64(17).ToString(),
                     FechaInicio = reader.IsDBNull(18) ? null : reader.GetDateTime(18),
                     FechaFin = reader.IsDBNull(19) ? null : reader.GetDateTime(19),
-                    TaskCountFromDb = reader.IsDBNull(20) ? 0 : reader.GetInt32(20)
+                    TaskCountFromDb = reader.IsDBNull(20) ? 0 : reader.GetInt32(20),
+                    Canal = reader.IsDBNull(21) ? null : reader.GetString(21),
+                    Socio = null, // Ya no usamos el campo Socio separado, ahora es Empresa
+                    Contacto = reader.IsDBNull(23) ? null : reader.GetString(23),
+                    Telefono = reader.IsDBNull(24) ? null : reader.GetString(24),
+                    CanalId = reader.IsDBNull(25) ? null : (int?)reader.GetInt32(25),
+                    SocioId = reader.IsDBNull(26) ? null : reader.GetInt64(26).ToString()
                 };
 
                 registros.Add(reg);
@@ -288,11 +297,14 @@ SELECT b.iMBitacora, b.iCodigo, b.tTipo, b.tTitulo, b.tDescripcion,
            ELSE b.nMinutosEstimado 
        END as nMinutosEstimado,
        p.tProyecto, e.tRazonSocial,
-       uResp.tNombreRed as NombreResponsable, b.tPrioridad, b.iMPadre, b.fInicio, b.fFin
+       uResp.tNombreRed as NombreResponsable, b.tPrioridad, b.iMPadre, b.fInicio, b.fFin,
+       can.tCanal, soc.tRazonSocial as Socio, b.tContacto, b.tTelefonoContacto, b.iMCanalContacto, b.iMSocio
 FROM DBITACORA b
 LEFT JOIN MPROYECTO p ON p.iMProyecto = b.iMProyecto
 LEFT JOIN MEMPRESA e ON e.iMEmpresa = b.iMEmpresa
 LEFT JOIN MUSUARIO uResp ON uResp.iMUsuario = b.iMResponsable
+LEFT JOIN MCANAL_CONTACTO can ON can.iMCanalContacto = b.iMCanalContacto
+LEFT JOIN MSOCIO soc ON soc.iMSocio = b.iMSocio
 WHERE b.iMBitacora = @id";
             AddParameter(cmd, "@id", bitacoraId);
 
@@ -326,12 +338,18 @@ WHERE b.iMBitacora = @id";
                 TiempoTranscurrido = minutosReal * 60,
                 TiempoEstimado = minutosEstimado * 60,
                 Proyecto = reader.IsDBNull(13) ? null : reader.GetString(13),
-                Empresa = reader.IsDBNull(14) ? null : reader.GetString(14),
+                Empresa = reader.IsDBNull(21) ? null : reader.GetString(21), // Mapeamos MSOCIO a Empresa
                 NombreAsignado = reader.IsDBNull(15) ? null : reader.GetString(15),
                 Prioridad = reader.IsDBNull(16) ? null : reader.GetString(16),
                 ParentId = reader.IsDBNull(17) ? null : reader.GetInt64(17).ToString(),
                 FechaInicio = reader.IsDBNull(18) ? null : reader.GetDateTime(18),
-                FechaFin = reader.IsDBNull(19) ? null : reader.GetDateTime(19)
+                FechaFin = reader.IsDBNull(19) ? null : reader.GetDateTime(19),
+                Canal = reader.IsDBNull(20) ? null : reader.GetString(20),
+                Socio = null, // Ya no usamos el campo Socio separado
+                Contacto = reader.IsDBNull(22) ? null : reader.GetString(22),
+                Telefono = reader.IsDBNull(23) ? null : reader.GetString(23),
+                CanalId = reader.IsDBNull(24) ? null : (int?)reader.GetInt32(24),
+                SocioId = reader.IsDBNull(25) ? null : reader.GetInt64(25).ToString()
             };
 
             await reader.CloseAsync();
@@ -435,7 +453,8 @@ WHERE iMBitacora = @id
                 var nextCodigo = Convert.ToInt32(nextCodigoObj);
 
                 var proyectoId = await EnsureProyectoAsync(connection, transaction, registro.Proyecto);
-                var empresaId = await EnsureEmpresaAsync(connection, transaction, registro.Empresa);
+                // Usamos EnsureSocioAsync con el valor de Empresa del DTO, ya que la UI manda el Socio en el campo Empresa
+                var socioId = await EnsureSocioAsync(connection, transaction, registro.Empresa);
 
                 var cmdInsert = connection.CreateCommand();
                 cmdInsert.Transaction = transaction;
@@ -444,12 +463,12 @@ INSERT INTO DBITACORA
     (iCodigo, tTipo, tTitulo, tDescripcion, tPrioridad, Estado,
      iMSolicitante, iMResponsable, iMProyecto, iMEmpresa,
      fRegistro, fAsignacionTiempo, fCierre, nMinutosEstimado, nMinutosReal, fEliminacion, lEliminado,
-     iMPadre, fInicio, fFin)
+     iMPadre, fInicio, fFin, iMCanalContacto, iMSocio, tContacto, tTelefonoContacto)
 VALUES
     (@codigo, @tipo, @titulo, @descripcion, @prioridad, @estado,
      @solicitante, @responsable, @proyecto, @empresa,
      @fRegistro, @fAsignacion, @fCierre, @minEst, @minReal, NULL, 0,
-     @padre, @fInicio, @fFin);
+     @padre, @fInicio, @fFin, @canal, @socio, @contacto, @telefono);
 SELECT CAST(SCOPE_IDENTITY() AS bigint);";
 
                 AddParameter(cmdInsert, "@codigo", nextCodigo);
@@ -461,7 +480,7 @@ SELECT CAST(SCOPE_IDENTITY() AS bigint);";
                 AddParameter(cmdInsert, "@solicitante", solicitanteId);
                 AddParameter(cmdInsert, "@responsable", responsableId);
                 AddParameter(cmdInsert, "@proyecto", proyectoId);
-                AddParameter(cmdInsert, "@empresa", empresaId);
+                AddParameter(cmdInsert, "@empresa", DBNull.Value); // iMEmpresa se deja nulo, usamos iMSocio
                 AddParameter(cmdInsert, "@fRegistro", registro.FechaCreacion == default ? DateTime.Now : registro.FechaCreacion);
                 AddParameter(cmdInsert, "@fAsignacion", registro.FechaAsignacion);
                 AddParameter(cmdInsert, "@fCierre", registro.FechaCierre);
@@ -470,6 +489,10 @@ SELECT CAST(SCOPE_IDENTITY() AS bigint);";
                 AddParameter(cmdInsert, "@padre", string.IsNullOrEmpty(registro.ParentId) ? (object)DBNull.Value : long.Parse(registro.ParentId));
                 AddParameter(cmdInsert, "@fInicio", registro.FechaInicio);
                 AddParameter(cmdInsert, "@fFin", registro.FechaFin);
+                AddParameter(cmdInsert, "@canal", registro.CanalId);
+                AddParameter(cmdInsert, "@socio", socioId);
+                AddParameter(cmdInsert, "@contacto", registro.Contacto);
+                AddParameter(cmdInsert, "@telefono", registro.Telefono);
 
                 var newIdObj = await cmdInsert.ExecuteScalarAsync();
                 var newId = Convert.ToInt64(newIdObj);
@@ -505,7 +528,8 @@ SELECT CAST(SCOPE_IDENTITY() AS bigint);";
                 var responsableId = !string.IsNullOrEmpty(registro.AsignadoA) ? long.Parse(registro.AsignadoA) : solicitanteId;
 
                 var proyectoId = await EnsureProyectoAsync(connection, transaction, registro.Proyecto);
-                var empresaId = await EnsureEmpresaAsync(connection, transaction, registro.Empresa);
+                // Usamos EnsureSocioAsync
+                var socioId = await EnsureSocioAsync(connection, transaction, registro.Empresa);
 
                 var cmdUpdate = connection.CreateCommand();
                 cmdUpdate.Transaction = transaction;
@@ -527,7 +551,11 @@ SET tTipo = @tipo,
     nMinutosReal = @minReal,
     iMPadre = @padre,
     fInicio = @fInicio,
-    fFin = @fFin
+    fFin = @fFin,
+    iMCanalContacto = @canal,
+    iMSocio = @socio,
+    tContacto = @contacto,
+    tTelefonoContacto = @telefono
 WHERE iMBitacora = @id";
 
                 AddParameter(cmdUpdate, "@tipo", registro.Tipo == "Incidente" ? "I" : "R");
@@ -538,7 +566,7 @@ WHERE iMBitacora = @id";
                 AddParameter(cmdUpdate, "@solicitante", solicitanteId);
                 AddParameter(cmdUpdate, "@responsable", responsableId);
                 AddParameter(cmdUpdate, "@proyecto", proyectoId);
-                AddParameter(cmdUpdate, "@empresa", empresaId);
+                AddParameter(cmdUpdate, "@empresa", DBNull.Value);
                 AddParameter(cmdUpdate, "@fRegistro", registro.FechaCreacion == default ? DateTime.Now : registro.FechaCreacion);
                 AddParameter(cmdUpdate, "@fAsignacion", registro.FechaAsignacion);
                 AddParameter(cmdUpdate, "@fCierre", registro.FechaCierre);
@@ -547,6 +575,10 @@ WHERE iMBitacora = @id";
                 AddParameter(cmdUpdate, "@padre", string.IsNullOrEmpty(registro.ParentId) ? (object)DBNull.Value : long.Parse(registro.ParentId));
                 AddParameter(cmdUpdate, "@fInicio", registro.FechaInicio);
                 AddParameter(cmdUpdate, "@fFin", registro.FechaFin);
+                AddParameter(cmdUpdate, "@canal", registro.CanalId);
+                AddParameter(cmdUpdate, "@socio", socioId);
+                AddParameter(cmdUpdate, "@contacto", registro.Contacto);
+                AddParameter(cmdUpdate, "@telefono", registro.Telefono);
                 AddParameter(cmdUpdate, "@id", bitacoraId);
 
                 await cmdUpdate.ExecuteNonQueryAsync();
@@ -672,6 +704,60 @@ SELECT CAST(SCOPE_IDENTITY() AS bigint);";
             return Convert.ToInt64(idObj);
         }
 
+        private async Task<long> EnsureSocioDefaultAsync(SqlConnection connection, SqlTransaction transaction)
+        {
+            var cmdSelect = connection.CreateCommand();
+            cmdSelect.Transaction = transaction;
+            cmdSelect.CommandText = "SELECT TOP 1 iMSocio FROM MSOCIO WHERE lActivo = 1 ORDER BY iMSocio";
+
+            var existing = await cmdSelect.ExecuteScalarAsync();
+            if (existing != null && existing != DBNull.Value)
+            {
+                return Convert.ToInt64(existing);
+            }
+
+            var cmdInsert = connection.CreateCommand();
+            cmdInsert.Transaction = transaction;
+            cmdInsert.CommandText = @"
+INSERT INTO MSOCIO (tRuc, tRazonSocial, lActivo)
+VALUES ('00000000000', 'Socio Generico', 1);
+SELECT CAST(SCOPE_IDENTITY() AS bigint);";
+
+            var idObj = await cmdInsert.ExecuteScalarAsync();
+            return Convert.ToInt64(idObj);
+        }
+
+        private async Task<long> EnsureSocioAsync(SqlConnection connection, SqlTransaction transaction, string? nombreSocio)
+        {
+            if (string.IsNullOrWhiteSpace(nombreSocio))
+            {
+                return await EnsureSocioDefaultAsync(connection, transaction);
+            }
+
+            var cmdSelect = connection.CreateCommand();
+            cmdSelect.Transaction = transaction;
+            cmdSelect.CommandText = "SELECT TOP 1 iMSocio FROM MSOCIO WHERE tRazonSocial = @nombre";
+            AddParameter(cmdSelect, "@nombre", nombreSocio);
+
+            var existing = await cmdSelect.ExecuteScalarAsync();
+            if (existing != null && existing != DBNull.Value)
+            {
+                return Convert.ToInt64(existing);
+            }
+
+            var cmdInsert = connection.CreateCommand();
+            cmdInsert.Transaction = transaction;
+            cmdInsert.CommandText = @"
+INSERT INTO MSOCIO (tRuc, tRazonSocial, lActivo)
+VALUES ('00000000000', @nombre, 1);
+SELECT CAST(SCOPE_IDENTITY() AS bigint);";
+
+            AddParameter(cmdInsert, "@nombre", nombreSocio);
+
+            var idObj = await cmdInsert.ExecuteScalarAsync();
+            return Convert.ToInt64(idObj);
+        }
+
         public async Task<List<string>> GetProyectosActivosAsync()
         {
             var result = new List<string>();
@@ -708,7 +794,7 @@ ORDER BY tProyecto";
             var cmd = connection.CreateCommand();
             cmd.CommandText = @"
 SELECT tRazonSocial
-FROM MEMPRESA
+FROM MSOCIO
 WHERE lActivo = 1
 ORDER BY tRazonSocial";
 
@@ -719,6 +805,58 @@ ORDER BY tRazonSocial";
                 {
                     result.Add(reader.GetString(0));
                 }
+            }
+
+            return result;
+        }
+
+        public async Task<List<KeyValuePair<int, string>>> GetCanalesActivosAsync()
+        {
+            var result = new List<KeyValuePair<int, string>>();
+
+            using var connection = _connectionFactory.CreateConnection();
+            await EnsureOpenAsync(connection);
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+SELECT iMCanalContacto, tCanal
+FROM MCANAL_CONTACTO
+WHERE lActivo = 1
+ORDER BY tCanal";
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                result.Add(new KeyValuePair<int, string>(
+                    reader.GetInt32(0),
+                    reader.GetString(1)
+                ));
+            }
+
+            return result;
+        }
+
+        public async Task<List<KeyValuePair<string, string>>> GetSociosActivosAsync()
+        {
+            var result = new List<KeyValuePair<string, string>>();
+
+            using var connection = _connectionFactory.CreateConnection();
+            await EnsureOpenAsync(connection);
+
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = @"
+SELECT iMSocio, tRazonSocial
+FROM MSOCIO
+WHERE lActivo = 1
+ORDER BY tRazonSocial";
+
+            using var reader = await cmd.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                result.Add(new KeyValuePair<string, string>(
+                    reader.GetInt64(0).ToString(),
+                    reader.GetString(1)
+                ));
             }
 
             return result;

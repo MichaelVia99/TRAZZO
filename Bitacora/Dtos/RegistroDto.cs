@@ -22,6 +22,8 @@ namespace Bitacora.Dtos
         public int TiempoEstimado { get; set; }
         public string? Proyecto { get; set; }
         public string? Empresa { get; set; }
+        public string? Contacto { get; set; }
+        public string? Telefono { get; set; }
         public string? Prioridad { get; set; }
         public string? Adjuntos { get; set; }
         public string? NombreAsignado { get; set; }

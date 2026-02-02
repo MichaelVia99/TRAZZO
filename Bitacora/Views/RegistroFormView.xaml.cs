@@ -27,6 +27,7 @@ namespace Bitacora.Views
         private readonly ObservableCollection<TareaRegistro> _tareas = new();
         private List<string> _allProyectos = new();
         private List<string> _allEmpresas = new();
+        private List<string> _allCanales = new();
         private Registro? _registroEditar;
         private string _errorMessage = string.Empty;
         private string _tituloError = string.Empty;
@@ -153,9 +154,11 @@ namespace Bitacora.Views
             _ = LoadDevs();
             _ = LoadProyectos();
             _ = LoadEmpresas();
+            _ = LoadCanalesAsync();
 
             ConfigureProyectoComboBoxFilter();
             ConfigureEmpresaComboBoxFilter();
+            ConfigureCanalComboBoxFilter();
 
             ConfigureFilterableComboBox(DevComboBox, o =>
             {
@@ -168,10 +171,12 @@ namespace Bitacora.Views
 
             ConfigureEditableComboBoxSelectionBehavior(ProyectoComboBox);
             ConfigureEditableComboBoxSelectionBehavior(EmpresaComboBox);
+            ConfigureEditableComboBoxSelectionBehavior(CanalComboBox);
             ConfigureEditableComboBoxSelectionBehavior(DevComboBox);
 
             ConfigureInputBlocking(ProyectoComboBox);
             ConfigureInputBlocking(EmpresaComboBox);
+            ConfigureInputBlocking(CanalComboBox);
             ConfigureInputBlocking(DevComboBox);
         }
 
@@ -380,6 +385,16 @@ namespace Bitacora.Views
                 EmpresaComboBox.Text = registro.Empresa;
             }
 
+            if (!string.IsNullOrEmpty(registro.Contacto))
+            {
+                ContactoTextBox.Text = registro.Contacto;
+            }
+
+            if (!string.IsNullOrEmpty(registro.Telefono))
+            {
+                TelefonoTextBox.Text = registro.Telefono;
+            }
+
             if (!string.IsNullOrEmpty(registro.Prioridad))
             {
                 var p = registro.Prioridad.Trim().ToLowerInvariant();
@@ -570,6 +585,26 @@ namespace Bitacora.Views
             }
         }
 
+        private async Task LoadCanalesAsync()
+        {
+            try
+            {
+                var nombres = await DatabaseService.Instance.GetCanalesActivosAsync();
+                _allCanales = nombres
+                    .Where(p => !string.IsNullOrWhiteSpace(p))
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(p => p)
+                    .ToList();
+
+                var inicial = _allCanales.Take(50).ToList();
+                CanalComboBox.ItemsSource = inicial;
+            }
+            catch
+            {
+            }
+        }
+
+
         private void ConfigureProyectoComboBoxFilter()
         {
             ProyectoComboBox.IsTextSearchEnabled = false;
@@ -609,6 +644,48 @@ namespace Bitacora.Views
                 cb.IsDropDownOpen = true;
             };
         }
+
+        private void ConfigureCanalComboBoxFilter()
+        {
+            CanalComboBox.IsTextSearchEnabled = false;
+
+            CanalComboBox.KeyUp += (s, e) =>
+            {
+                if (s is not ComboBox cb)
+                    return;
+
+                if (_allCanales == null || _allCanales.Count == 0)
+                    return;
+
+                if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Enter || e.Key == Key.Tab || e.Key == Key.Escape)
+                    return;
+
+                var text = cb.Text?.Trim() ?? string.Empty;
+
+                if (string.IsNullOrEmpty(text))
+                {
+                    cb.ItemsSource = _allCanales.Take(50).ToList();
+                    cb.SelectedItem = null!;
+                    cb.IsDropDownOpen = false;
+                    return;
+                }
+
+                if (text.Length < 2)
+                    return;
+
+                var lower = text.ToLowerInvariant();
+                var matches = _allCanales
+                    .Where(p => p != null && p.ToLowerInvariant().Contains(lower))
+                    .Take(50)
+                    .ToList();
+
+                cb.ItemsSource = matches;
+                cb.SelectedItem = null!;
+                cb.IsDropDownOpen = true;
+            };
+        }
+
+
 
         private void ConfigureEmpresaComboBoxFilter()
         {
@@ -690,6 +767,8 @@ namespace Bitacora.Views
         {
             if (sender is Button b && b.DataContext is TareaRegistro t)
             {
+                // Max Nivel allowed is 2 (0, 1, 2).
+                // If current is 2, cannot create child (which would be 3).
                 if (t.Nivel >= 2) return;
                 
                 var sub = new TareaRegistro 

@@ -131,6 +131,36 @@ public class DatabaseService
         return new List<string>();
     }
 
+    public async Task<List<string>> GetCanalesActivosAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("canales/activos");
+            if (response.IsSuccessStatusCode)
+            {
+                var nombres = await response.Content.ReadFromJsonAsync<List<string>>();
+                return nombres ?? new List<string>();
+            }
+        }
+        catch { }
+        return new List<string>();
+    }
+
+    public async Task<List<string>> GetSociosActivosAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("socios/activos");
+            if (response.IsSuccessStatusCode)
+            {
+                var nombres = await response.Content.ReadFromJsonAsync<List<string>>();
+                return nombres ?? new List<string>();
+            }
+        }
+        catch { }
+        return new List<string>();
+    }
+
     public async Task<Usuario?> GetUsuarioByIdAsync(string id)
     {
         try
@@ -350,6 +380,8 @@ public class DatabaseService
                 TiempoEstimado = modelo.TiempoEstimado,
                 Proyecto = modelo.Proyecto,
                 Empresa = modelo.Empresa,
+                Contacto = modelo.Contacto,
+                Telefono = modelo.Telefono,
                 Prioridad = modelo.Prioridad,
                 Adjuntos = modelo.Adjuntos,
                 TotalPesoAdjuntosKb = modelo.TotalPesoAdjuntosKb,

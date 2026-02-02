@@ -24,6 +24,13 @@ namespace BitacoraApi.Models
         public string? Adjuntos { get; set; }
         public string? NombreAsignado { get; set; }
         
+        public int? CanalId { get; set; }
+        public string? Canal { get; set; }
+        public string? Contacto { get; set; }
+        public string? Telefono { get; set; }
+        public string? SocioId { get; set; }
+        public string? Socio { get; set; }
+
         // Nuevos campos para recursividad
         public string? ParentId { get; set; }
         public DateTime? FechaInicio { get; set; }

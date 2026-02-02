@@ -12,20 +12,27 @@
     <UserControl.Resources>
         <converters:MathConverter x:Key="MathConverter"/>
         <converters:StringToBooleanConverter x:Key="StringToBooleanConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
         <converters:PathTokenToThumbnailConverter x:Key="PathTokenToThumbnailConverter"/>
+        <converters:PathToFileNameConverter x:Key="PathToFileNameConverter"/>
+        <converters:PathToIsImageConverter x:Key="PathToIsImageConverter"/>
+        <converters:PathTokenToSizeMbConverter x:Key="PathTokenToSizeMbConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
         <!-- New Simplified Hierarchy Styles -->
         <Style x:Key="TreeLineStyle" TargetType="Rectangle">
             <Setter Property="Width" Value="2"/>
             <Setter Property="Fill" Value="#999999"/>
-            <!-- Nivel 1 (Hijos de Root) -> Azul -->
+            <!-- Vertical lines (spine) match Parent's color -->
             <Style.Triggers>
+                <DataTrigger Binding="{Binding Nivel}" Value="0">
+                    <Setter Property="Fill" Value="#FF9800"/>
+                </DataTrigger>
                 <DataTrigger Binding="{Binding Nivel}" Value="1">
-                    <Setter Property="Fill" Value="#007ACC"/>
+                    <Setter Property="Fill" Value="#3498DB"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Nivel}" Value="2">
-                    <Setter Property="Fill" Value="#E65100"/>
+                    <Setter Property="Fill" Value="#888888"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -34,13 +41,18 @@
             <Setter Property="Width" Value="2"/>
             <Setter Property="Fill" Value="#999999"/>
             <Style.Triggers>
-                <!-- Root (Nivel 0) connects to L1 (Blue) -->
+                <!-- Parent Stub connects to Children. Matches Child's Level Color -->
+                <!-- Nivel 0 Parent connects to Nivel 1 Children (Azul) -->
                 <DataTrigger Binding="{Binding Nivel}" Value="0">
-                    <Setter Property="Fill" Value="#007ACC"/>
+                    <Setter Property="Fill" Value="#3498DB"/>
                 </DataTrigger>
-                <!-- L1 connects to L2 (Orange) -->
+                <!-- Nivel 1 Parent connects to Nivel 2 Children (Gris) -->
                 <DataTrigger Binding="{Binding Nivel}" Value="1">
-                    <Setter Property="Fill" Value="#E65100"/>
+                    <Setter Property="Fill" Value="#888888"/>
+                </DataTrigger>
+                <!-- Nivel 2 Parent (No children expected/visible) -->
+                <DataTrigger Binding="{Binding Nivel}" Value="2">
+                    <Setter Property="Fill" Value="Transparent"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -57,6 +69,20 @@
                 </Grid.RowDefinitions>
                 <!-- Tree Lines (Column 0) -->
                 <Grid Grid.Column="0" Grid.RowSpan="2" Width="18" ClipToBounds="False">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Nivel}" Value="0"/>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ItemsSource.Count}" Value="1"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <!-- Vertical Line (Top Half - Always visible for subtasks) -->
                     <!-- Connects from top to center (L-shape corner) -->
                     <Rectangle Width="2"
@@ -104,13 +130,16 @@
                                Margin="8,14,0,0">
                          <Rectangle.Style>
                             <Style TargetType="Rectangle">
-                                <Setter Property="Fill" Value="#999999"/>
+                                <Setter Property="Fill" Value="#FF9800"/>
                                 <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Nivel}" Value="0">
+                                        <Setter Property="Fill" Value="#FF9800"/>
+                                    </DataTrigger>
                                     <DataTrigger Binding="{Binding Nivel}" Value="1">
-                                        <Setter Property="Fill" Value="#007ACC"/>
+                                        <Setter Property="Fill" Value="#3498DB"/>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Nivel}" Value="2">
-                                        <Setter Property="Fill" Value="#E65100"/>
+                                        <Setter Property="Fill" Value="#888888"/>
                                     </DataTrigger>
                                     <!-- Visible for Nivel 0 to connect spine to card -->
                                 </Style.Triggers>
@@ -128,6 +157,20 @@
 
                     <!-- Expander / Stub Container (Col 0) -->
                     <Grid Grid.Column="0" Width="18">
+                        <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding Nivel}" Value="0"/>
+                                        <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, Path=ItemsSource.Count}" Value="1"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                         <!-- Horizontal Connector (Left to Center) -->
                         <Rectangle Height="2"
                                    VerticalAlignment="Top"
@@ -138,11 +181,14 @@
                                     <Setter Property="Fill" Value="#999999"/>
                                     <Setter Property="Width" Value="18"/>
                                     <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Nivel}" Value="0">
+                                            <Setter Property="Fill" Value="#FF9800"/>
+                                        </DataTrigger>
                                         <DataTrigger Binding="{Binding Nivel}" Value="1">
-                                            <Setter Property="Fill" Value="#007ACC"/>
+                                            <Setter Property="Fill" Value="#3498DB"/>
                                         </DataTrigger>
                                         <DataTrigger Binding="{Binding Nivel}" Value="2">
-                                            <Setter Property="Fill" Value="#E65100"/>
+                                            <Setter Property="Fill" Value="#888888"/>
                                         </DataTrigger>
                                         <!-- Always full width to connect to card -->
                                     </Style.Triggers>
@@ -186,7 +232,7 @@
                                 </Setter>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding Nivel}" Value="1">
-                                        <Setter Property="Margin" Value="0,2,0,4"/>
+                                        <Setter Property="Margin" Value="0,0,0,3"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="5" ShadowDepth="1" Direction="270" Color="#F0F0F0" Opacity="0.5"/>
@@ -194,7 +240,7 @@
                                         </Setter>
                                     </DataTrigger>
                                     <DataTrigger Binding="{Binding Nivel}" Value="0">
-                                        <Setter Property="Margin" Value="0,2,0,0"/>
+                                        <Setter Property="Margin" Value="0,0,0,3"/>
                                         <Setter Property="Effect">
                                             <Setter.Value>
                                                 <DropShadowEffect BlurRadius="5" ShadowDepth="1" Direction="270" Color="#F0F0F0" Opacity="0.5"/>
@@ -625,7 +671,6 @@
                                             HorizontalAlignment="Center"
                                             FontSize="10"
                                             Height="27"
-                                            Background="{StaticResource PrimaryOrangeLightBrush}"
                                             BorderBrush="{StaticResource InputBorderBrush}"
                                             BorderThickness="1"
                                             Foreground="White"
@@ -634,7 +679,18 @@
                                         <Button.Style>
                                             <Style TargetType="Button">
                                                 <Setter Property="Visibility" Value="{Binding DataContext.IsEditMode, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                <!-- Default (Nivel 0) creates Nivel 1 (Blue) -->
+                                                <Setter Property="Background" Value="#3498DB"/>
                                                 <Style.Triggers>
+                                                    <!-- Nivel 0 (Orange Line) -> Button creates Nivel 1 (Blue Line) -->
+                                                    <DataTrigger Binding="{Binding Nivel}" Value="0">
+                                                        <Setter Property="Background" Value="#3498DB"/>
+                                                    </DataTrigger>
+                                                    <!-- Nivel 1 (Blue Line) -> Button creates Nivel 2 (Gray Line) -->
+                                                    <DataTrigger Binding="{Binding Nivel}" Value="1">
+                                                        <Setter Property="Background" Value="#888888"/>
+                                                    </DataTrigger>
+                                                    <!-- Nivel 2 (Gray Line) -> No more levels -->
                                                     <DataTrigger Binding="{Binding Nivel}" Value="2">
                                                         <Setter Property="Visibility" Value="Collapsed"/>
                                                     </DataTrigger>
@@ -1115,6 +1171,202 @@
                                    Visibility="{Binding EmpresaError, Converter={StaticResource StringToVisibilityConverter}}"/>
                     </StackPanel>
                 </Grid>
+
+                <!-- Canal, Contacto y Telefono -->
+                <Grid Margin="0,8,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,4,0">
+                        <!-- Canal -->
+                        <TextBlock Text="Canal" 
+                                   FontSize="10" 
+                                   FontWeight="Medium"
+                                   Margin="0,0,0,2">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource TextSecondary}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CanalError, Converter={StaticResource StringToBooleanConverter}}" Value="True">
+                                            <Setter Property="Foreground" Value="{StaticResource NewButtonRedBrush}"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                        <Border CornerRadius="5"
+                                Background="White"
+                                BorderThickness="1"
+                                Padding="1"
+                                Margin="0,0,0,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding CanalError, Converter={StaticResource StringToBooleanConverter}}" Value="True">
+                                            <Setter Property="BorderBrush" Value="{StaticResource NewButtonRedBrush}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="False">
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ComboBox x:Name="CanalComboBox"
+                                          Grid.Column="0"
+                                          Padding="3"
+                                          FontSize="10"
+                                          Background="Transparent"
+                                          BorderThickness="0"
+                                          Foreground="{StaticResource TextPrimary}"
+                                          IsEditable="True"
+                                          IsTextSearchEnabled="False"
+                                          StaysOpenOnEdit="True"
+                                          Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding Text, ElementName=CanalComboBox, Mode=OneWay}"
+                                         Padding="3"
+                                         FontSize="10"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="{StaticResource TextPrimary}"
+                                         IsReadOnly="True">
+                                    <TextBox.Style>
+                                        <Style TargetType="TextBox">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsEditMode}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBox.Style>
+                                </TextBox>
+
+                                <Viewbox Grid.Column="1" 
+                                         Width="14"
+                                         Height="14"
+                                         VerticalAlignment="Center" 
+                                         Margin="7,0,7,0"
+                                         IsHitTestVisible="False"
+                                         Visibility="{Binding CanalError, Converter={StaticResource StringToVisibilityConverter}}">
+                                    <Canvas Width="24" Height="24">
+                                        <Ellipse Width="18" Height="18"
+                                                 Stroke="{StaticResource NewButtonRedBrush}"
+                                                 StrokeThickness="2"
+                                                 Canvas.Left="3"
+                                                 Canvas.Top="3"/>
+                                        <Path Data="M12 8 L12 13"
+                                              Stroke="{StaticResource NewButtonRedBrush}"
+                                              StrokeThickness="2"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"/>
+                                        <Path Data="M12 16 L12.01 16"
+                                              Stroke="{StaticResource NewButtonRedBrush}"
+                                              StrokeThickness="2"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"/>
+                                    </Canvas>
+                                </Viewbox>
+                            </Grid>
+                        </Border>
+                        <TextBlock Text="{Binding CanalError}" 
+                                   Foreground="{StaticResource NewButtonRedBrush}" 
+                                   FontSize="8" 
+                                   Margin="0,0,0,0"
+                                   Visibility="{Binding CanalError, Converter={StaticResource StringToVisibilityConverter}}"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Margin="4,0,4,0">
+                        <TextBlock Text="Contacto" 
+                                   FontSize="10" 
+                                   FontWeight="Medium"
+                                   Margin="0,0,0,2"
+                                   Foreground="{StaticResource TextSecondary}"/>
+                        <Border CornerRadius="5"
+                                Background="White"
+                                BorderThickness="1"
+                                Padding="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="False">
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBox x:Name="ContactoTextBox" 
+                                     Padding="3" 
+                                     FontSize="10" 
+                                     Background="Transparent" 
+                                     BorderThickness="0" 
+                                     Foreground="{StaticResource TextPrimary}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="IsReadOnly" Value="True"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                                <Setter Property="IsReadOnly" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Margin="4,0,0,0">
+                        <TextBlock Text="Teléfono" 
+                                   FontSize="10" 
+                                   FontWeight="Medium"
+                                   Margin="0,0,0,2"
+                                   Foreground="{StaticResource TextSecondary}"/>
+                        <Border CornerRadius="5"
+                                Background="White"
+                                BorderThickness="1"
+                                Padding="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderBrush" Value="{StaticResource InputBorderBrush}"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsEditMode}" Value="False">
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBox x:Name="TelefonoTextBox" 
+                                     Padding="3" 
+                                     FontSize="10" 
+                                     Background="Transparent" 
+                                     BorderThickness="0" 
+                                     Foreground="{StaticResource TextPrimary}">
+                                <TextBox.Style>
+                                    <Style TargetType="TextBox">
+                                        <Setter Property="IsReadOnly" Value="True"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsEditMode}" Value="True">
+                                                <Setter Property="IsReadOnly" Value="False"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBox.Style>
+                            </TextBox>
+                        </Border>
+                    </StackPanel>
+                </Grid>
                     <!-- Título -->
                     <TextBlock Text="Título" 
            FontSize="10" 
@@ -1352,7 +1604,7 @@
                                 BorderThickness="1"
                                 Foreground="White"
                                 Padding="10,4"
-                                Margin="0,0,0,0"
+                                Margin="0,5,0,0"
                                 Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <Button.Resources>
                                 <Style TargetType="Border">
